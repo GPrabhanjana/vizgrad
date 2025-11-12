@@ -1,7 +1,6 @@
-import math
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Optional, Tuple, Set, List, Dict
+from typing import Optional, Tuple, List
 
 
 class ValueVisualization:
