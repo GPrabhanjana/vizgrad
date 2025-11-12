@@ -47,3 +47,6 @@ Issues = "https://github.com/GPrabhanjana/vizgrad/issues"
 [tool.setuptools.packages.find]
 include = ["vizgrad*"]
 exclude = ["tests*"]
+
+[tool.flake8]
+max-line-length = 88
