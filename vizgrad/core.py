@@ -441,26 +441,43 @@ class Value:
     def _analyze_dependencies(self, variable):
         """Single-pass dependency analysis returning dependencies and topological order."""
         dependencies = set()
-        topo_order = []
-        visited = set()
-        
-        def traverse(node):
-            if node in visited:
-                return node in dependencies
-            visited.add(node)
-            
+        dep_cache = {}          # node → does it depend on variable?
+
+        def has_dependency(node):
+            if node in dep_cache:
+                return dep_cache[node]
+
             if node is variable:
+                dep_cache[node] = True
                 dependencies.add(node)
                 return True
-            
-            has_dep = any(traverse(parent) for parent in node._prev)
-            if has_dep:
+
+            # evaluate *all* parents first
+            dep_flags = [has_dependency(p) for p in node._prev]
+            result = any(dep_flags)
+
+            dep_cache[node] = result
+            if result:
                 dependencies.add(node)
+            return result
+
+        has_dependency(self)
+
+        # ---------- topological order of the dependent subgraph ----------
+        topo_order = []
+        visited = set()
+
+        def build_topo(node):
+            if node in visited or node not in dependencies:
+                return
+            visited.add(node)
+            for parent in node._prev:
+                if parent in dependencies:
+                    build_topo(parent)
+            if node is not variable:          # variable itself is not recomputed
                 topo_order.append(node)
-            
-            return has_dep
-        
-        traverse(self)
+
+        build_topo(self)
         return dependencies, topo_order
     
     def depends_on(self, variable) -> bool:
